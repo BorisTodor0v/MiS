@@ -17,8 +17,13 @@ void main() async {
         projectId: "mis-lab-d85ac"
       )
     );
-  } else {
-    await Firebase.initializeApp();
+  } else { //Android
+    await Firebase.initializeApp(options: const FirebaseOptions(
+      apiKey: 'AIzaSyBRbm_FM7ElabXbomhIALgkvTT3YwhBB9s',
+      appId: '1:802653666966:android:1eb73a63f042a3d1100cb7',
+      messagingSenderId: '802653666966',
+      projectId: 'mis-lab-d85ac',)
+    );
   }
   runApp(const MyApp());
 }
