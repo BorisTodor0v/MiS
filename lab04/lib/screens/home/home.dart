@@ -1,3 +1,4 @@
+import 'package:calendar_view/calendar_view.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lab03/models/exam.dart';
@@ -40,25 +41,30 @@ class _HomeState extends State<Home> {
           backgroundColor: Colors.blue.shade50,
           elevation: 0.0,
           actions: <Widget>[
-            TextButton.icon(
+            IconButton(
               onPressed: () {
                 setState(() {
                   toggleView();
                 });
               },
-              icon: showExamsGrid ? const Icon(Icons.calendar_month) : const Icon(Icons.grid_view),
-              label: const Text("") //showExamsGrid ? const Text("Calendar view") : const Text("Grid view"),
+              icon: Icon(
+                showExamsGrid ? Icons.calendar_month : Icons.grid_view,
+                color: Theme.of(context).primaryColor,
+              ),
+              //label: showExamsGrid ? const Text("Calendar view") : const Text("Grid view"),
             ),
-            TextButton.icon(
+            IconButton(
               onPressed: (){
                 showDialog(context: context, builder: (context) => const ExamDialog());
               },
-              icon: const Icon(Icons.add_box),
-              label: const Text(""),
+              icon: Icon(Icons.add_box, color: Theme.of(context).primaryColor,),
             ),
             TextButton.icon(
               icon: const Icon(Icons.person),
               onPressed: () async {
+                CalendarControllerProvider.of(context).controller.events.forEach((event) {
+                  CalendarControllerProvider.of(context).controller.remove(event);
+                });
                 await _authService.signOut();
               },
               label: const Text("Sign out"),

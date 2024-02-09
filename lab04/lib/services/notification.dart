@@ -1,82 +1,134 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
+import 'package:awesome_notifications/awesome_notifications.dart';
 
 class NotificationService {
 
-  static final FlutterLocalNotificationsPlugin _flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+  static Future<void> init() async{
+    await AwesomeNotifications().initialize(
+      null,
+      [
+        NotificationChannel(
+          channelKey: 'high_importance_channel',
+          channelName: 'Notifications',
+          channelDescription: 'Notification channel description',
+          importance: NotificationImportance.Default,
+          playSound: true
+        )
+      ],
+      channelGroups: [
+        NotificationChannelGroup(
+          channelGroupKey: 'high_importance_group',
+          channelGroupName: 'Group 1'
+        )
+      ]
+    );
+    
+    await AwesomeNotifications().isNotificationAllowed().then(
+      (isAllowed) async {
+        if(!isAllowed){
+          await AwesomeNotifications().requestPermissionToSendNotifications();
+        }
+      }
+    );
 
-  static Future init() async{
-    // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-    const AndroidInitializationSettings initializationSettingsAndroid = AndroidInitializationSettings('@mipmap/ic_launcher');
-    final DarwinInitializationSettings initializationSettingsDarwin = DarwinInitializationSettings(onDidReceiveLocalNotification: (id, title, body, payload) {});
-    final LinuxInitializationSettings initializationSettingsLinux = const LinuxInitializationSettings(defaultActionName: 'Open notification');
-    final InitializationSettings initializationSettings = InitializationSettings(
-        android: initializationSettingsAndroid,
-        iOS: initializationSettingsDarwin,
-        linux: initializationSettingsLinux);
-    _flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onDidReceiveNotificationResponse: (details) {});
+    await AwesomeNotifications().setListeners(
+      onActionReceivedMethod: onActionReceivedMethod,
+      onNotificationCreatedMethod: onNotificationCreatedMethod,
+      onNotificationDisplayedMethod: onNotificationDisplayedMethod,
+      onDismissActionReceivedMethod: onDismissActionReceivedMethod,
+    );
+
   }
 
-  // show a simple notification
+  static Future<void> onNotificationCreatedMethod(ReceivedNotification receivedNotification) async {
+    debugPrint('onNotificationCreatedMethod');
+  }
+
+  static Future<void> onNotificationDisplayedMethod(ReceivedNotification receivedNotification) async {
+    debugPrint('onNotificationDisplayedMethod');
+  }
+
+  static Future<void> onDismissActionReceivedMethod(ReceivedAction receivedAction) async {
+    debugPrint('onDismissActionReceivedMethod');
+  }
+
+  static Future<void> onActionReceivedMethod(ReceivedAction receivedAction) async {
+    debugPrint('onActionReceivedMethod');
+  }
+
+  // test scheduled notification - notification pops up 5 seconds after method is called
   /*
-  static Future showSimpleNotification({
-    required String title,
-    required String body,
-    required String payload
-  }) async {
-    const AndroidNotificationDetails androidNotificationDetails =
-    AndroidNotificationDetails('your channel id', 'your channel name',
-        channelDescription: 'your channel description',
-        importance: Importance.defaultImportance,
-        priority: Priority.defaultPriority,
-        ticker: 'ticker');
-    const NotificationDetails notificationDetails = NotificationDetails(android: androidNotificationDetails);
-    await _flutterLocalNotificationsPlugin.show(0, title, body, notificationDetails, payload: payload);
+  static Future showSimpleNotification() async {
+    Exam exam = Exam(course: "Test course",timestamp: DateTime.now().add(Duration(seconds: 5)));
+    DateTime reminderTime = exam.timestamp;
+    debugPrint("Notification set to fire at ${DateFormat('dd/MM/yyyy HH:mm:ss').format(reminderTime)}");
+    AwesomeNotifications().createNotification(
+      content: NotificationContent(
+        id: -1,
+        channelKey: 'high_importance_channel',
+        title: "Test notification",
+        body: "This is a test scheduled notification fired 5 seconds after pressing a button"
+      ),
+      schedule: NotificationCalendar(
+        year: reminderTime.year,
+        month: reminderTime.month,
+        day: reminderTime.day,
+        hour: reminderTime.hour,
+        minute: reminderTime.minute,
+        second: reminderTime.second
+      )
+    );
   }
    */
 
   // scheduled notification - reminder 1 day before exam
   static Future showScheduledNotificationDayBefore(String course, DateTime examTime) async {
     DateTime reminderTime = examTime.subtract(const Duration(hours: 24));
-    const AndroidNotificationDetails androidNotificationDetails =
-    AndroidNotificationDetails('your channel id', 'your channel name',
-        channelDescription: 'your channel description',
-        importance: Importance.defaultImportance,
-        priority: Priority.defaultPriority,
-        ticker: 'ticker',
-    );
-    const NotificationDetails notificationDetails = NotificationDetails(android: androidNotificationDetails);
-    await _flutterLocalNotificationsPlugin.zonedSchedule(
-        0,
-        'Exam Reminder',
-        'You have an upcoming exam on ${DateFormat('dd/MM/yyyy HH:mm').format(examTime)}',
-        tz.TZDateTime.from(reminderTime, tz.local),
-        notificationDetails,
-        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    debugPrint("Notification set to fire at ${DateFormat('dd/MM/yyyy HH:mm:ss').format(reminderTime)}");
+    AwesomeNotifications().createNotification(
+        content: NotificationContent(
+            id: -1,
+            channelKey: 'high_importance_channel',
+            title: "Exam reminder",
+            body: "You have an upcoming exam for $course tomorrow at ${DateFormat('HH:mm').format(examTime)}"
+        ),
+        schedule: NotificationCalendar(
+            year: reminderTime.year,
+            month: reminderTime.month,
+            day: reminderTime.day,
+            hour: reminderTime.hour,
+            minute: reminderTime.minute,
+            second: reminderTime.second
+        )
     );
   }
 
   // scheduled notification - reminder 1 hour before exam
   static Future showScheduledNotificationHourBefore(String course, DateTime examTime) async {
     DateTime reminderTime = examTime.subtract(const Duration(minutes: 60));
-    const AndroidNotificationDetails androidNotificationDetails =
-    AndroidNotificationDetails('your channel id', 'your channel name',
-        channelDescription: 'your channel description',
-        importance: Importance.defaultImportance,
-        priority: Priority.defaultPriority,
-        ticker: 'ticker');
-    const NotificationDetails notificationDetails = NotificationDetails(android: androidNotificationDetails);
-    await _flutterLocalNotificationsPlugin.zonedSchedule(
-      0,
-      'Exam Reminder',
-      'You have an upcoming exam on ${DateFormat('dd/MM/yyyy HH:mm').format(examTime)}',
-      tz.TZDateTime.from(reminderTime, tz.local),
-      notificationDetails,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+    debugPrint("Notification set to fire at ${DateFormat('dd/MM/yyyy HH:mm:ss').format(reminderTime)}");
+    AwesomeNotifications().createNotification(
+        content: NotificationContent(
+            id: -1,
+            channelKey: 'high_importance_channel',
+            title: "Exam reminder",
+            body: "You have an upcoming exam for $course in one hour at ${DateFormat('HH:mm').format(examTime)}! Good luck"
+        ),
+        schedule: NotificationCalendar(
+            year: reminderTime.year,
+            month: reminderTime.month,
+            day: reminderTime.day,
+            hour: reminderTime.hour,
+            minute: reminderTime.minute,
+            second: reminderTime.second
+        )
     );
-
   }
+
+  static Future cancelScheduledNotifications() async {
+    await AwesomeNotifications().cancelAllSchedules();
+  }
+
+
 }

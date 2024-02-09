@@ -8,14 +8,18 @@ class Calendar extends StatelessWidget {
   final Function toggleView;
   const Calendar({super.key, required this.toggleView});
 
+  Future<void> addEventsToCalendar(List<Exam> exams, BuildContext context) async {
+    for(Exam exam in exams){
+      final event = await CalendarEventData(title: exam.course, date: exam.timestamp);
+      CalendarControllerProvider.of(context).controller.add(event);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final exams = Provider.of<List<Exam>>(context);
-    for (Exam exam in exams) {
-      CalendarControllerProvider.of(context).controller.add(
-          CalendarEventData(title: exam.course, date: exam.timestamp)
-      );
-    }
+    addEventsToCalendar(exams, context);
+
 
     return Scaffold(
       body: MonthView(

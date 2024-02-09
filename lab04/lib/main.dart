@@ -7,12 +7,9 @@ import 'package:lab03/services/auth.dart';
 import 'package:lab03/services/notification.dart';
 import 'package:provider/provider.dart';
 import 'models/user.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
 // 191096 - Тодоров Борис
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  tz.initializeTimeZones();
   await NotificationService.init();
   if(kIsWeb){
     await Firebase.initializeApp(options: const FirebaseOptions(
